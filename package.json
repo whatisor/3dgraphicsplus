@@ -1,0 +1,19 @@
+{
+  "name": "landingpage3d",
+  "description": "vn.karoshi",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "*",
+
+    "grunt": "*",
+    "grunt-contrib-jshint": "*",
+    "grunt-contrib-nodeunit": "*",
+    "grunt-contrib-uglify": "*",
+    "grunt-contrib-qunit":"*",
+    "grunt-contrib-watch":"*",
+    "grunt-contrib-concat":"*"
+  },
+  "scripts":{ 
+  	"start": "node index.js"
+  	 }
+}
