@@ -78,7 +78,7 @@
 				//
 
 				var geometry = new THREE.CylinderBufferGeometry( 0.1, 0.1, 0.2, 32 ).translate( 0, 0.1, 0 );
-				var target;
+				var target = new THREE.Group();
 				function onSelect() {
 
 					if ( reticle.visible ) {
@@ -143,10 +143,10 @@
 								}
 
 							} );
-							target = gltf.scene;
-							gltf.scene.scale.set(0.5,0.5,0.5);
+							target.add(gltf.scene);
+							gltf.scene.scale.set(0.3,0.3,0.3);
 							//gltf.scene.position.z = -1.0;
-							scene.add( gltf.scene );
+							scene.add( target );
 
 							roughnessMipmapper.dispose();
 
