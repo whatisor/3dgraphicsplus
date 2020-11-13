@@ -144,7 +144,9 @@
 
 							} );
 							target.add(gltf.scene);
+							var bbox = new THREE.Box3().setFromObject(gltf.scene);
 							gltf.scene.scale.set(0.3,0.3,0.3);
+							gltf.scene.position.y -= bbox.min.y*gltf.scene.scale.y;
 							//gltf.scene.position.z = -1.0;
 							scene.add( target );
 
