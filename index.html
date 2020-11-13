@@ -78,16 +78,16 @@
 				//
 
 				var geometry = new THREE.CylinderBufferGeometry( 0.1, 0.1, 0.2, 32 ).translate( 0, 0.1, 0 );
-
+				var target;
 				function onSelect() {
 
 					if ( reticle.visible ) {
 
-						var material = new THREE.MeshPhongMaterial( { color: 0xffffff * Math.random() } );
-						var mesh = new THREE.Mesh( geometry, material );
-						mesh.position.setFromMatrixPosition( reticle.matrix );
-						mesh.scale.y = Math.random() * 2 + 1;
-						scene.add( mesh );
+						//var material = new THREE.MeshPhongMaterial( { color: 0xffffff * Math.random() } );
+						//var mesh = new THREE.Mesh( geometry, material );
+						target.position.setFromMatrixPosition( reticle.matrix );
+						//mesh.scale.y = Math.random() * 2 + 1;
+						//scene.add( mesh );
 
 					}
 
@@ -143,8 +143,9 @@
 								}
 
 							} );
-
-							gltf.scene.position.z = -1.0;
+							target = gltf.scene;
+							gltf.scene.scale.set(0.5,0.5,0.5);
+							//gltf.scene.position.z = -1.0;
 							scene.add( gltf.scene );
 
 							roughnessMipmapper.dispose();
