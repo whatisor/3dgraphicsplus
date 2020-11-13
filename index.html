@@ -16,6 +16,11 @@
 
 			import * as THREE from './three.module.js';
 			import { ARButton } from './ARButton.js';
+			import { OrbitControls } from './OrbitControls.js';
+			import { GLTFLoader } from './GLTFLoader.js';
+			import { RGBELoader } from './RGBELoader.js';
+			import { RoughnessMipmapper } from './RoughnessMipmapper.js';
+
 
 			var container;
 			var camera, scene, renderer;
@@ -45,9 +50,25 @@
 				//
 
 				renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+				renderer.xr.enabled = true;
+				
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.xr.enabled = true;
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 1;
+				renderer.outputEncoding = THREE.sRGBEncoding;
+				container.appendChild( renderer.domElement );
+
+				const pmremGenerator = new THREE.PMREMGenerator( renderer );
+				pmremGenerator.compileEquirectangularShader();
+
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.addEventListener( 'change', render ); // use if there is no animation loop
+				controls.minDistance = 2;
+				controls.maxDistance = 10;
+				controls.target.set( 0, 0, - 0.2 );
+				controls.update();
+
 				container.appendChild( renderer.domElement );
 
 				//
@@ -83,6 +104,56 @@
 				reticle.matrixAutoUpdate = false;
 				reticle.visible = false;
 				scene.add( reticle );
+
+
+
+				//Test 3D
+				test3D();
+				function test3D(){
+					new RGBELoader()
+					.setDataType( THREE.UnsignedByteType )
+					.setPath( 'assests/' )
+					.load( 'royal_esplanade_1k.hdr', function ( texture ) {
+
+						const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
+
+						scene.background = envMap;
+						scene.environment = envMap;
+
+						texture.dispose();
+						pmremGenerator.dispose();
+
+						render();
+
+						// model
+
+						// use of RoughnessMipmapper is optional
+						const roughnessMipmapper = new RoughnessMipmapper( renderer );
+
+						const loader = new GLTFLoader().setPath( 'assests/' );
+						loader.load( 'DamagedHelmet.gltf', function ( gltf ) {
+
+							gltf.scene.traverse( function ( child ) {
+
+								if ( child.isMesh ) {
+
+									// TOFIX RoughnessMipmapper seems to be broken with WebGL 2.0
+									// roughnessMipmapper.generateMipmaps( child.material );
+
+								}
+
+							} );
+
+							scene.add( gltf.scene );
+
+							roughnessMipmapper.dispose();
+
+							render();
+
+						} );
+
+					} );
+				}
 
 				//
 
