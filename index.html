@@ -74,7 +74,11 @@
 
 				//
 
-				document.body.appendChild( ARButton.createButton( renderer, { requiredFeatures: [ 'hit-test' ] } ) );
+				document.body.appendChild( ARButton.createButton( renderer, { requiredFeatures: [ 'hit-test' ],
+				optionalFeatures: ["dom-overlay"],
+				domOverlay: {
+				root: document.getElementById( 'overlay' )
+				} } ) );
 
 				//
 
