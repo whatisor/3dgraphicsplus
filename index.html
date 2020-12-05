@@ -47,6 +47,15 @@
 				light.position.set( 0.5, 1, 0.25 );
 				scene.add( light );
 
+				//sample sprite
+				const map = new THREE.TextureLoader().load( 'assests/avater2.png' );
+				const material = new THREE.SpriteMaterial( { map: map } );
+
+				const sprite = new THREE.Sprite( material );
+				sprite.scale.set(0.2,0.2,0.2);
+				sprite.position.y = 0.7;
+				sprite.position.x = 0.5;
+
 				//
 
 				renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
@@ -81,17 +90,12 @@
 
 				//
 
-				var geometry = new THREE.CylinderBufferGeometry( 0.1, 0.1, 0.2, 32 ).translate( 0, 0.1, 0 );
 				var target = new THREE.Group();
 				function onSelect() {
 
 					if ( reticle.visible ) {
 
-						//var material = new THREE.MeshPhongMaterial( { color: 0xffffff * Math.random() } );
-						//var mesh = new THREE.Mesh( geometry, material );
 						target.position.setFromMatrixPosition( reticle.matrix );
-						//mesh.scale.y = Math.random() * 2 + 1;
-						//scene.add( mesh );
 
 					}
 
@@ -148,6 +152,7 @@
 
 							} );
 							target.add(gltf.scene);
+							target.add(sprite);
 							var bbox = new THREE.Box3().setFromObject(gltf.scene);
 							gltf.scene.scale.set(0.3,0.3,0.3);
 							gltf.scene.position.y -= bbox.min.y*gltf.scene.scale.y;

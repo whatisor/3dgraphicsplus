@@ -1,10 +1,13 @@
 var express = require('express');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
 var app = express();
-var temp = 0;
-app.use('/', express.static('.'));
-var server = app.listen(process.env.PORT || 8001, function () {
-  var host = server.address().address;
-  var port = server.address().port;
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+http.createServer(app).listen(process.env.PORT || 8001);
+https.createServer(options, app).listen(443);
 
-  console.log('Listening at http://%s:%s', host, port);
-});
+app.use(express.static('.'));
