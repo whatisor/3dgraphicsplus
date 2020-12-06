@@ -34,7 +34,8 @@
 
 		var hitTestSource = null;
 		var hitTestSourceRequested = false;
-		var sprite;
+		var sprite,sprite2
+		var selectables = []
 
 		init();
 		animate();
@@ -160,6 +161,12 @@
 							});
 							target.add(gltf.scene);
 							target.add(sprite);
+							selectables.push(sprite);
+							sprite2 = sprite.clone();
+							sprite2.material = sprite.material.clone();
+							target.add(sprite2);
+							sprite2.position.x = 0;
+							selectables.push(sprite2);
 
 							var bbox = new THREE.Box3().setFromObject(gltf.scene);
 							gltf.scene.scale.set(0.3, 0.3, 0.3);
@@ -256,7 +263,7 @@
 			mouseVector.set(x, y, 0.5);
 			raycaster.setFromCamera(mouseVector, camera);
 
-			return raycaster.intersectObject(sprite, true);
+			return raycaster.intersectObjects(selectables, true);
 
 		}
 
