@@ -8,6 +8,8 @@ var ARButton = {
 
 			function onSessionStarted( session ) {
 
+
+
 				session.addEventListener( 'end', onSessionEnded );
 
 				/*
@@ -21,6 +23,7 @@ var ARButton = {
 				button.textContent = 'STOP AR';
 
 				currentSession = session;
+				
 
 			}
 
@@ -32,6 +35,7 @@ var ARButton = {
 
 				currentSession = null;
 
+				
 			}
 
 			//

@@ -9,12 +9,14 @@
 </head>
 
 <body>
-
+	<video id="video" autoplay="true" style="display: none;"></video>
 	<div id="info">
 		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> ar - hit test<br />(Chrome Android
 		81+)
 	</div>
 	<div id="container"></div>
+	<canvas id="2d" style="display:none;position:absolute;top:0;left:0;z-index: 1;"></canvas>
+	<button onclick="capture(); "style="position:absolute;bottom:0;left:0;z-index: 1;">Capture</button>
 	<script type="module">
 
 		import * as THREE from './three.module.js';
@@ -34,13 +36,14 @@
 
 		var hitTestSource = null;
 		var hitTestSourceRequested = false;
-		var sprite,sprite2
+		var sprite, sprite2
 		var selectables = []
 
 		init();
 		animate();
 
 		function init() {
+
 
 			container = document.getElementById('container');
 			//document.body.appendChild( container );
@@ -64,7 +67,7 @@
 
 			//
 
-			renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+			renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
 			renderer.xr.enabled = true;
 
 			renderer.setPixelRatio(window.devicePixelRatio);
@@ -104,9 +107,9 @@
 
 				if (reticle.visible && !placed) {
 
-					
+
 					target.position.setFromMatrixPosition(reticle.matrix);
-					placed  =true;
+					placed = true;
 
 				}
 
@@ -217,8 +220,8 @@
 
 			}
 
-			const intersects = getIntersects(event.layerX?event.layerX:event.touches[0].clientX,
-			 event.layerY?event.layerY:event.touches[0].clientY);
+			const intersects = getIntersects(event.layerX ? event.layerX : event.touches[0].clientX,
+				event.layerY ? event.layerY : event.touches[0].clientY);
 
 			if (intersects.length > 0) {
 
@@ -241,10 +244,11 @@
 
 
 		function onDocumentMouseDown(event) {
-
+			//capture();
 			//event.preventDefault();
 			if (selectedObject) {
-				showtime();
+				//showtime();
+				//selectedObject = null;
 			}
 		}
 
@@ -265,22 +269,119 @@
 			y = - (y / window.innerHeight) * 2 + 1;
 
 			mouseVector.set(x, y, 0.5);
-			raycaster.setFromCamera(mouseVector, renderer.xr.getCamera(camera));
+			var xrcam = camera;
+			if (renderer.xr.getSession())
+				xrcam = renderer.xr.getCamera(camera);
+			raycaster.setFromCamera(mouseVector, xrcam);
 
 			return raycaster.intersectObjects(selectables, true);
 
 		}
 
 		function showtime() {
-			var dis = 1;
-			var duration = 1000;
-			var movingup = new TWEEN.Tween(sprite.parent.position).to(
-				new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5),
-				duration).easing(TWEEN.Easing.Quadratic.InOut).start();
-			var rotation = new TWEEN.Tween(sprite.parent.rotation).to(
-				new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5),
-				duration).easing(TWEEN.Easing.Quadratic.InOut).delay(500).start();
+			// var dis = 1;
+			// var duration = 1000;
+			// var movingup = new TWEEN.Tween(sprite.parent.position).to(
+			// 	new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5),
+			// 	duration).easing(TWEEN.Easing.Quadratic.InOut).start();
+			// var rotation = new TWEEN.Tween(sprite.parent.rotation).to(
+			// 	new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5),
+			// 	duration).easing(TWEEN.Easing.Quadratic.InOut).delay(500).start();
+
+			capture();
 		}
+
+		function capture() {
+			//hack threejs			
+			renderer.setFramebuffer(null);
+			renderer.setRenderTarget(renderer.getRenderTarget()); // Hack #15830
+
+			if (renderer.xr.getSession())
+				renderer.render(scene, renderer.xr.getCamera(camera));
+			var img = renderer.domElement.toDataURL('image/jpeg', 0.8);
+
+			//exit AR
+			if (renderer.xr.getSession())
+				renderer.xr.getSession().end();
+
+			setTimeout(openFullscreen, 500);
+			setTimeout(cameraPreview, 700);
+
+			//saveFile(img, "Captured.jpg");
+		}
+		window.capture = capture;
+		var saveFile = function (strData, filename) {
+			var link = document.createElement('a');
+			if (typeof link.download === 'string') {
+				document.body.appendChild(link); //Firefox requires the link to be in the body
+				link.download = filename;
+				link.href = strData;
+
+				window.removeEventListener("click", onDocumentMouseDown);
+				link.click();
+				document.body.removeChild(link); //remove the link when done
+			} else {
+				location.replace(uri);
+			}
+		}
+
+		function cameraPreview() {
+
+			var video = document.getElementById('video');
+
+			if (navigator.mediaDevices.getUserMedia) {
+				var successCallback = function (stream) {
+					video.srcObject = stream;
+				};
+				var errorCallback = function (error) {
+					console.log(error);
+				};
+				navigator.mediaDevices.getUserMedia({
+					audio: false,
+					video: { facingMode: { ideal: 'environment' } } // prefer rear-facing camera
+				}).then(successCallback, errorCallback);
+			}
+
+
+			var canvas = document.getElementById("2d");
+			canvas.style.display = "block";
+			canvas.width = renderer.domElement.offsetWidth;
+			canvas.height = renderer.domElement.offsetHeight;
+			var context = canvas.getContext('2d');
+			renderFrame();
+			function calculateSize(srcSize, dstSize) {
+				var srcRatio = srcSize.width / srcSize.height;
+				var dstRatio = dstSize.width / dstSize.height;
+				if (dstRatio > srcRatio) {
+					return {
+						width: dstSize.height * srcRatio,
+						height: dstSize.height
+					};
+				} else {
+					return {
+						width: dstSize.width,
+						height: dstSize.width / srcRatio
+					};
+				}
+			}
+			function renderFrame() {
+				// re-register callback
+				requestAnimationFrame(renderFrame);
+				// set internal canvas size to match HTML element size
+				canvas.width = canvas.scrollWidth;
+				canvas.height = canvas.scrollHeight;
+				if (video.readyState === video.HAVE_ENOUGH_DATA) {
+					// scale and horizontally center the camera image
+					var videoSize = { width: video.videoWidth, height: video.videoHeight };
+					var canvasSize = { width: canvas.width, height: canvas.height };
+					var renderSize = videoSize;//calculateSize(videoSize, canvasSize);
+					var xOffset = (canvasSize.width - renderSize.width) / 2;
+					var yOffset = (canvasSize.height - renderSize.height) / 2;
+					context.drawImage(video, xOffset, yOffset, videoSize.width, videoSize.height);
+				}
+			}
+		}
+
 
 		//
 
@@ -313,6 +414,8 @@
 
 						hitTestSourceRequested = false;
 						hitTestSource = null;
+
+
 
 					});
 
@@ -349,6 +452,20 @@
 			}
 
 		}
+		window.openFullscreen = function(){
+					var elem = document.body;
+					if (elem.requestFullscreen) {
+						elem.requestFullscreen();
+					} else if (elem.mozRequestFullScreen) { /* Firefox */
+						elem.mozRequestFullScreen();
+					} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+						elem.webkitRequestFullscreen();
+					} else if (elem.msRequestFullscreen) { /* IE/Edge */
+						elem.msRequestFullscreen();
+					}
+					elem.style.width = '100%';
+					elem.style.height = '100%';
+				}
 
 	</script>
 </body>
